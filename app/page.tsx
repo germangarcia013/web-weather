@@ -1,65 +1,195 @@
+"use client";
+import { Header } from "./components/header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import search from "@/app/assets/images/icon-search.svg";
 import Image from "next/image";
+import bgToday from "@/app/assets/images/bg-today-large.png";
+import iconSnow from "@/app/assets/images/icon-snow.webp";
+import iconSunny from "@/app/assets/images/icon-sunny.webp";
+import { useState } from "react";
+import { useWeatherData } from "./utils/useWatherData";
+import {
+  formatHumity,
+  formatPrecip,
+  formatTemp,
+  formatWind,
+  getFirstAndLastCity,
+} from "./utils/Format";
+import { WeatherCard } from "./types/Types";
+import { Spinner } from "@/components/ui/spinner";
+import { getWeatherIcon } from "./utils/weatherCodeIcon";
 
 export default function Home() {
+  const [cityInput, setCityInput] = useState("");
+  const [cityName, setCityName] = useState("Berlin, Germany");
+  const [coords, setCoords] = useState<{ lat: number; lon: number }>({
+    lat: 52.52,
+    lon: 13.405,
+  });
+  const { data, loading } = useWeatherData(coords.lat, coords.lon);
+
+  const weatherInfo: WeatherCard[] = [
+    {
+      title: "Feels Like",
+      value: formatTemp(data?.current.apparent_temperature ?? 0),
+    },
+    {
+      title: "Humidity",
+      value: formatHumity(data?.current.relative_humidity_2m ?? 0),
+    },
+    {
+      title: "Wind",
+      value: formatWind(data?.current.wind_speed_10m ?? 0),
+    },
+    {
+      title: "Precipitation",
+      value: formatPrecip(data?.current.precipitation ?? 0),
+    },
+  ];
+
+  const handleSearch = async () => {
+    if (!cityInput) return;
+
+    const res = await fetch(`/api/geocode?q=${encodeURIComponent(cityInput)}`);
+    const data = await res.json();
+    if (data.length > 0) {
+      const lat = parseFloat(data[0].lat);
+      const lon = parseFloat(data[0].lon);
+      setCoords({ lat, lon });
+      setCityName(data[0].display_name);
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="w-[1240px] h-screen flex flex-col px-4 ">
+      <Header />
+      <div className="h-32 flex flex-col items-center justify-center gap-6 ">
+        <h1 className="text-5xl text-white">How's the sky looking today?</h1>
+
+        <div className="flex max-w-xl items-center gap-6 w-full relative  ">
+          <Image src={search} alt="" className="absolute  px-2 w-9 " />
+          <Input
+            type="email"
+            value={cityInput}
+            onChange={(e) => setCityInput(e.target.value)}
+            placeholder="Search for a place..."
+            className=" pl-9 text-white h-12 bg-[hsl(243,23%,24%)] border-none "
+          />
+          <Button
+            type="submit"
+            onClick={handleSearch}
+            variant="outline"
+            className="cursor-pointer h-12"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            Search
+          </Button>
         </div>
-      </main>
+      </div>
+      <div className="flex mt-12 ">
+        <div className="flex flex-col text-white w-[65%] justify-between gap-8 ">
+          <div className="relative w-full">
+            {loading ? (
+              <div className="w-full rounded-3xl h-[277px] bg-[hsl(243,27%,20%)] flex flex-col justify-center items-center">
+                <Spinner />
+                Loading...
+              </div>
+            ) : (
+              <div>
+                <Image src={bgToday} alt="" className="w-full rounded-3xl" />
+                <div className="absolute top-0 left-0 w-full h-full flex justify-between items-center p-6">
+                  <div className="flex flex-col gap-1">
+                    <p className="text-white text-2xl">
+                      {getFirstAndLastCity(cityName)}
+                    </p>
+                    <p className="text-sm">
+                      {data?.current.time.toDateString()}
+                    </p>
+                  </div>
+                  <div className="flex justify-center items-center gap-2">
+                    <Image src={iconSunny} alt="" className="" width={100} />
+                    <p className="text-7xl">
+                      {formatTemp(data?.current.temperature_2m ?? 0)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex w-full justify-between flex-wrap gap-4">
+            {weatherInfo.map((item, index) => (
+              <div key={index}>
+                {loading ? (
+                  <div className="bg-[hsl(243,27%,20%)] h-24 w-44 p-4 gap-2 flex flex-col rounded-md border border-neutral-700 " />
+                ) : (
+                  <div className="bg-[hsl(243,27%,20%)] h-24 w-44 p-4 gap-2 flex flex-col rounded-md border border-neutral-700">
+                    <h2 className="text-gray-400">{item.title}</h2>
+                    <p className="text-2xl text-white">{item.value}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <h3 className="text-white text-2xl">Daily forecast</h3>
+            <div className="flex justify-between ">
+              {(loading
+                ? Array.from({ length: 7 })
+                : data?.daily.time ?? []
+              ).map((day, index) => (
+                <div key={index}>
+                  {loading ? (
+                    <div className="w-24 bg-[hsl(243,27%,20%)]  p-4 rounded-md h-[140px] " />
+                  ) : (
+                    <div className="w-24 bg-[hsl(243,27%,20%)] p-4 rounded-md h-[140px]  ">
+                      <h2 className="text-center">
+                        {new Date(day as number).toDateString().slice(0, 3)}
+                      </h2>
+
+                      {getWeatherIcon(Number(data?.daily.weather_code[index]))}
+
+                      <div className="flex justify-between text-sm gap-3">
+                        <p>
+                          {formatTemp(
+                            data?.daily.temperature_2m_max[index] ?? 0
+                          )}
+                        </p>
+                        <p>
+                          {formatTemp(
+                            data?.daily.temperature_2m_min[index] ?? 0
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className=" w-[30%] ml-11 p-5 rounded-3xl flex flex-col gap-3 justify-between text-white bg-[hsl(243,27%,20%)]">
+          <h2 className="text-white text-xl">Hourly forecast</h2>
+
+          {data?.hourly.time.slice(15, 23).map((hour, index) => (
+            <div
+              key={index}
+              className="bg-[hsl(243,23%,24%)] flex h-14 rounded-sm items-center justify-between px-4"
+            >
+              <div className="flex items-center">
+                <div className="w-10">
+                  {getWeatherIcon(Number(data?.hourly.weather_code[index]))}
+                </div>
+
+                <p>{hour.getHours()}h</p>
+              </div>
+              <p>{formatTemp(data.hourly.temperature_2m[index + 15])}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
