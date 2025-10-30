@@ -1,13 +1,3 @@
-## Getting Started
+## Desafio do Frontend mentor
 
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Trata-se de um site de meteorologia onde é possível consultar, em tempo real, as condições climáticas de qualquer cidade de um país que desejar.
