@@ -51,13 +51,36 @@ export default function Home() {
   const handleSearch = async () => {
     if (!cityInput) return;
 
-    const res = await fetch(`/api/geocode?q=${encodeURIComponent(cityInput)}`);
-    const data = await res.json();
-    if (data.length > 0) {
-      const lat = parseFloat(data[0].lat);
-      const lon = parseFloat(data[0].lon);
-      setCoords({ lat, lon });
-      setCityName(data[0].display_name);
+    try {
+      const res = await fetch(
+        `/api/geocode?q=${encodeURIComponent(cityInput)}`
+      );
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("Erro na API:", errorText);
+        return;
+      }
+
+      const text = await res.text();
+
+      if (!text || text.trim() === "") {
+        console.error("Resposta vazia da API");
+        return;
+      }
+
+      const data: any[] = JSON.parse(text);
+
+      if (data.length > 0) {
+        const lat = parseFloat(data[0].lat);
+        const lon = parseFloat(data[0].lon);
+        setCoords({ lat, lon });
+        setCityName(data[0].display_name);
+      } else {
+        console.warn("Nenhum resultado encontrado para:", cityInput);
+      }
+    } catch (err) {
+      console.error("Erro ao buscar geolocalização:", err);
     }
   };
 
