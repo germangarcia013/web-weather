@@ -2,7 +2,7 @@ export const formatTemp = (value: number) => `${Math.round(value)}°`;
 
 export const formatWind = (value: number) => `${Math.round(value)} km/h`;
 
-export const formatPrecip = (value: number) => `${value.toFixed(0)} mm`;
+export const formatPrecip = (value: number) => `${value.toFixed(1)} mm`;
 
 export const formatHumity = (value: number) => `${Math.round(value)}%`;
 

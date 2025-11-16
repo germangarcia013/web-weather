@@ -32,21 +32,23 @@ export default function Home() {
   const weatherInfo: WeatherCard[] = [
     {
       title: "Feels Like",
-      value: formatTemp(data?.current.apparent_temperature ?? 0),
+      value: formatTemp(Number(data?.current.apparent_temperature)),
     },
     {
       title: "Humidity",
-      value: formatHumity(data?.current.relative_humidity_2m ?? 0),
+      value: formatHumity(Number(data?.current.relative_humidity_2m)),
     },
     {
       title: "Wind",
-      value: formatWind(data?.current.wind_speed_10m ?? 0),
+      value: formatWind(Number(data?.current.wind_speed_10m)),
     },
     {
       title: "Precipitation",
-      value: formatPrecip(data?.current.precipitation ?? 0),
+      value: formatPrecip(Number(data?.current.precipitation)),
     },
   ];
+
+  console.log(data?.current.precipitation);
 
   const handleSearch = async () => {
     if (!cityInput) return;
@@ -83,7 +85,6 @@ export default function Home() {
       console.error("Erro ao buscar geolocalização:", err);
     }
   };
-
   return (
     <div className="w-[1240px] h-screen flex flex-col px-4 ">
       <Header />
@@ -132,7 +133,7 @@ export default function Home() {
                   <div className="flex justify-center items-center gap-2">
                     <Image src={iconSunny} alt="" className="" width={100} />
                     <p className="text-7xl">
-                      {formatTemp(data?.current.temperature_2m ?? 0)}
+                      {formatTemp(Number(data?.current.temperature_2m))}
                     </p>
                   </div>
                 </div>
@@ -176,12 +177,12 @@ export default function Home() {
                       <div className="flex justify-between text-sm gap-3">
                         <p>
                           {formatTemp(
-                            data?.daily.temperature_2m_max[index] ?? 0
+                            Number(data?.daily.temperature_2m_max[index])
                           )}
                         </p>
                         <p>
                           {formatTemp(
-                            data?.daily.temperature_2m_min[index] ?? 0
+                            Number(data?.daily.temperature_2m_min[index])
                           )}
                         </p>
                       </div>
